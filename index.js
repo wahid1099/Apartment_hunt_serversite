@@ -45,7 +45,7 @@ async function run(){
           const database = client.db('ApartmentHunt');
           const apartmentCollection = database.collection('apartments');
           const userCollection = database.collection('user');
-          const reviewsCollection = database.collection('reviews');
+          const bookingCollection = database.collection('booking');
             //api 
           //getting all apartments
          app.get('/apartments', async (req, res) => {
@@ -61,6 +61,18 @@ async function run(){
             const singleapartment=await apartmentCollection.findOne(query);
             res.json(singleapartment);
         });
+        //add apartments
+               //inserting data to database collection
+     
+
+//book apartment
+ 
+ app.post('/bookapartment',async (req,res)=>{
+    const bookapartment=req.body;
+    const bookinresult=await bookingCollection.insertOne(bookapartment);
+   // console.log(carresult);
+    res.json(bookinresult);
+});
 
   //addding services to database
   app.post('/addApartments', async (req, res) => {
@@ -82,7 +94,72 @@ async function run(){
 
 });
 
- 
+ //getting user all appointments
+ app.get('/userbooking', async (req, res) => {
+    const email = req.query.email;
+    const query = { useremail: email }
+    
+    const cursor = bookingCollection.find(query);
+    const apartmentbooked = await cursor.toArray();
+    res.json(apartmentbooked);
+});
+//getting all orders
+ //alluser orders
+ app.get('/allbookibng',async (req, res) => {
+    const cursor=apartmentCollection.find({});
+    const bookigns=await cursor.toArray();
+    res.send(bookigns);
+    });
+
+
+
+ //deleting user car booked for buyings 
+ app.delete('/deleteBooking/:id',async (req,res)=>{
+  const id=req.params.id;
+  const query={_id:ObjectId(id)};
+  const result=await bookingCollection.deleteOne(query);
+  console.log(result);
+  res.json(result);
+});
+
+ //deleting user car item for buyings 
+ app.delete('/deleteapartment/:id',async (req,res)=>{
+   const id=req.params.id;
+   const query={_id:ObjectId(id)};
+   const result=await apartmentCollection.deleteOne(query);
+   res.json(result);
+});
+  ///getting admins database
+  app.get('/users/:email',async (req, res)=>{
+    const email=req.params.email;
+    const query={email: email};
+    const user=await userCollection.findOne(query);
+    let isAdmin =false;
+    if(user?.role==='admin') {
+        isAdmin = true;
+    }
+    res.json({admin: isAdmin});
+
+
+    });
+  //adding user data to databse
+  app.post('/users',async (req, res) => {
+    const user=req.body;
+    const result = await userCollection.insertOne(user);
+    console.log(result);
+    res.json(result);
+    });
+///adding already exists users  data to database
+app.put('/users',async (req, res) => {
+    const user = req.body;
+    const filter={email: user.email};
+   
+    const options = {upsert: true};
+    const updateDoc={$set:user};
+    const result=await userCollection.updateOne(filter,updateDoc,options);
+    console.log(result);
+    res.json(result);
+});
 
 
 
